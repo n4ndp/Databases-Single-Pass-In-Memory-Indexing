@@ -190,7 +190,7 @@ if __name__ == "__main__": # Example usage
     spimi = SPIMI("test.json", 200)
     #print(spimi.spimi())
     #print(spimi.list_blocks())
-    print(spimi.merge_blocks(["block0.txt", "block2.txt"], ["block1.txt", "block3.txt"], 0))
+    print(spimi.merge_blocks(["block0test.txt", "block2test.txt"], ["block1test.txt", "block3test.txt"], 0))
 
 
 
