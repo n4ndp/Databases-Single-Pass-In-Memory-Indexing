@@ -1,5 +1,5 @@
 import json
-import sys
+import sys  
 import os
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -83,6 +83,274 @@ class SPIMI:
 
         return block_number # Return the number of blocks created
 
+    def list_blocks(self):
+        """Returns a list of the blocks."""
+        blocks = []
+        for file in os.listdir(BLOCKS_DIR):
+            if file.startswith('block'):
+                blocks.append(file)
+
+        return blocks # Return a list of the blocks created
+
+    def merge_blocks(self, block_names, other_block_names, merged_block_number):
+        """
+        block_names: a list of the names of the blocks to be merged
+        other_block_names: a list of the names of the other blocks to be merged
+        """
+        """Merges two blocks."""
+        merged_block = {} # Merge the two blocks
+        merged_block_list = []
+
+        block = None
+        other_block = None
+
+        if block_names and other_block_names:
+            block = open(BLOCKS_DIR + block_names[0], "r")
+            other_block = open(BLOCKS_DIR + other_block_names[0], "r")
+        else:
+            return # ...
+
+        block_line = block.readline()
+        other_block_line = other_block.readline()
+        i, j = 0, 0 # index for block_names and other_block_names
+
+        while True:
+            if sys.getsizeof(merged_block) > self.block_limit:
+                    merged_block_list.append(self.write_block_to_disk(merged_block, "block_", merged_block_number, is_sorted=True))
+                    merged_block_number += 1
+                    merged_block = {}
+
+            # CASE 1: block_names and other_block_names are not empty
+            if block_line != "" and other_block_line != "":
+                block_term_tuple = eval(block_line)
+                other_block_term_tuple = eval(other_block_line)
+
+                if block_term_tuple[0] == other_block_term_tuple[0]:
+                    merged_postings_list = block_term_tuple[1] + other_block_term_tuple[1]
+                    merged_block[block_term_tuple[0]] = merged_postings_list
+                    block_line = block.readline()
+                    other_block_line = other_block.readline()
+                elif block_term_tuple[0] < other_block_term_tuple[0]:
+                    merged_block[block_term_tuple[0]] = block_term_tuple[1]
+                    block_line = block.readline()
+                else:
+                    merged_block[other_block_term_tuple[0]] = other_block_term_tuple[1]
+                    other_block_line = other_block.readline()
+                
+                if block_line == "":
+                    block.close()
+                    i += 1
+                    if i < len(block_names):
+                        block = open(BLOCKS_DIR + block_names[i], "r")
+                        block_line = block.readline()
+
+                if other_block_line == "":
+                    other_block.close()
+                    j += 1
+                    if j < len(other_block_names):
+                        other_block = open(BLOCKS_DIR + other_block_names[j], "r")
+                        other_block_line = other_block.readline()
+            
+            # CASE 2: block_line is empty
+            elif block_line == "" and other_block_line != "":
+                other_block_term_tuple = eval(other_block_line)
+                merged_block[other_block_term_tuple[0]] = other_block_term_tuple[1]
+                other_block_line = other_block.readline()
+
+                if other_block_line == "":
+                    other_block.close()
+                    j += 1
+                    if j < len(other_block_names):
+                        other_block = open(BLOCKS_DIR + other_block_names[j], "r")
+                        other_block_line = other_block.readline()
+
+            # CASE 3: other_block_line is empty
+            elif block_line != "" and other_block_line == "":
+                block_term_tuple = eval(block_line)
+                merged_block[block_term_tuple[0]] = block_term_tuple[1]
+                block_line = block.readline()
+
+                if block_line == "":
+                    block.close()
+                    i += 1
+                    if i < len(block_names):
+                        block = open(BLOCKS_DIR + block_names[i], "r")
+                        block_line = block.readline()
+            else:
+                # CASE 4: block_names and other_block_names are empty
+                break
+        
+        if merged_block:
+            merged_block_list.append(self.write_block_to_disk(merged_block, "block_", merged_block_number, is_sorted=True))
+            merged_block_number += 1
+        
+        return merged_block_number, merged_block_list # Return the number of blocks created and the list of the blocks created
+        
 if __name__ == "__main__": # Example usage
-    spimi = SPIMI("test.json", 2000)
-    print(spimi.spimi())
+    spimi = SPIMI("test.json", 200)
+    #print(spimi.spimi())
+    #print(spimi.list_blocks())
+    print(spimi.merge_blocks(["block0.txt", "block2.txt"], ["block1.txt", "block3.txt"], 0))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+    def merge_blocks(self, block_names, other_block_names, merged_block_number):
+        
+        block_names: a list of the names of the blocks to be merged
+        other_block_names: a list of the names of the other blocks to be merged
+        
+        Merges two blocks.
+        merged_block = {} # Merge the two blocks
+        merged_block_list = []
+
+        block = None
+        other_block = None
+
+        if block_names and other_block_names:
+            block = open(BLOCKS_DIR + block_names[0], "r")
+            other_block = open(BLOCKS_DIR + other_block_names[0], "r")
+        else:
+            return # ...
+
+        block_line = block.readline()
+        other_block_line = other_block.readline()
+        i, j = 0, 0 # index for block_names and other_block_names
+
+        # CASE 0: block_names and other_block_names are not empty
+        while block_line and other_block_line:
+            # CASE 1: block_line and other_block_line are not empty
+            block_term_tuple = eval(block_line)
+            other_block_term_tuple = eval(other_block_line)
+
+            if block_term_tuple[0] == other_block_term_tuple[0]:
+                merged_postings_list = block_term_tuple[1] + other_block_term_tuple[1]
+                merged_block[block_term_tuple[0]] = merged_postings_list
+                block_line = block.readline()
+                other_block_line = other_block.readline()
+
+            elif block_term_tuple[0] < other_block_term_tuple[0]:
+                merged_block[block_term_tuple[0]] = block_term_tuple[1]
+                block_line = block.readline()
+
+            else:
+                merged_block[other_block_term_tuple[0]] = other_block_term_tuple[1]
+                other_block_line = other_block.readline()
+
+            if sys.getsizeof(merged_block) > self.block_limit:
+                merged_block_list.append(self.write_block_to_disk(merged_block, "block", merged_block_number, is_sorted=True))
+                merged_block_number += 1
+                merged_block = {}
+
+            # CASE 2: block_line is empty
+            if block_line == "":
+                block.close()
+                i += 1
+                if i == len(block_names):
+                    # CASE 2.1: block_names is empty
+                    break # no more blocks to read
+                # CASE 2.2: block_names is not empty
+                block = open(BLOCKS_DIR + block_names[i], "r")
+                block_line = block.readline()
+
+            # CASE 3: other_block_line is empty
+            if other_block_line == "":
+                other_block.close()
+                j += 1
+                if j == len(other_block_names):
+                    # CASE 3.1: other_block_names is empty
+                    break # no more blocks to read
+                # CASE 3.2: other_block_names is not empty
+                other_block = open(BLOCKS_DIR + other_block_names[j], "r")
+                other_block_line = other_block.readline()
+
+        # CASE 4: block_names or other_block_names is empty
+        while block_line:
+            block_term_tuple = eval(block_line)
+            merged_block[block_term_tuple[0]] = block_term_tuple[1]
+            block_line = block.readline()
+
+            if block_line == "":
+                block.close()
+                i += 1
+                if i == len(block_names):
+                    # CASE 4.1: block_names is empty
+                    break # no more blocks to read
+                # CASE 4.2: block_names is not empty
+                block = open(BLOCKS_DIR + block_names[i], "r")
+                block_line = block.readline()
+
+            if sys.getsizeof(merged_block) > self.block_limit:
+                merged_block_list.append(self.write_block_to_disk(merged_block, "block", merged_block_number, is_sorted=True))
+                merged_block_number += 1
+                merged_block = {}
+
+        while other_block_line:
+            other_block_term_tuple = eval(other_block_line)
+            merged_block[other_block_term_tuple[0]] = other_block_term_tuple[1]
+            other_block_line = other_block.readline()
+
+            if other_block_line == "":
+                other_block.close()
+                j += 1
+                if j == len(other_block_names):
+                    # CASE 4.1: other_block_names is empty
+                    break # no more blocks to read
+                # CASE 4.2: other_block_names is not empty
+                other_block = open(BLOCKS_DIR + other_block_names[j], "r")
+                other_block_line = other_block.readline()
+
+            if sys.getsizeof(merged_block) > self.block_limit:
+                merged_block_list.append(self.write_block_to_disk(merged_block, "block", merged_block_number, is_sorted=True))
+                merged_block_number += 1
+                merged_block = {}
+
+        # Write the last block to disk
+        if merged_block:
+            merged_block_list.append(self.write_block_to_disk(merged_block, "block", merged_block_number, is_sorted=True))
+            merged_block_number += 1
+
+        return merged_block_number, merged_block_list # Return the number of blocks created and the list of the blocks created
+"""
