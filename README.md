@@ -28,8 +28,7 @@ Here is an example of the data contained in the dataset:
 
 This dataset contains a wide range of information about Spotify songs, making it a valuable resource for various data analysis and research purposes. The data includes audio features, lyrics, and other metadata related to each song.
 
-
-## **SPIMI Algorithm**
+## **[SPIMI](https://nlp.stanford.edu/IR-book/html/htmledition/single-pass-in-memory-indexing-1.html) Algorithm**
 
 The SPIMI algorithm is a single-pass algorithm for creating inverted indexes from a document collection. The algorithm is based on the observation that the postings lists for a given term are ordered in the document collection. The algorithm uses a single block of main memory to build the inverted index. The algorithm is as follows:
 
@@ -49,3 +48,5 @@ SPIMI-Invert(token_stream):
     write_block_to_disk(sorted_terms, dictionary, output_file)
     return output_file
 ```
+
+Merging of blocks is analogous to [BSBI](https://nlp.stanford.edu/IR-book/html/htmledition/blocked-sort-based-indexing-1.html) algorithm.
