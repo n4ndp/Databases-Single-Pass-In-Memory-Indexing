@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 import os
+import re
 import nltk
 nltk.download('stopwords')
 nltk.download('punkt')
@@ -32,13 +33,7 @@ class Preprocessor:
         if self.stop_words: # Remove stop words
             tokens = [word for word in tokens if word not in self.stop_words]
 
-        stoplist = ["0","1","2","3","4","5","6","7","8","9","0","_","--","\\","&",
-                    "^",">",'.',"@","=","$",'?','[',']','¿',"(",")",'-','!',"<",
-                    '\'',',',":","``","''",";","»",'(-)',"+","/","«","{","}",
-                    "--","|","`","~"]
-        
-        tokens = [word for word in tokens if word not in stoplist]
-
+        tokens = [word for word in tokens if re.match(r'^[A-Za-z]+$', word)]
         tokens = [self.ps.stem(word) for word in tokens]
 
         return tokens
