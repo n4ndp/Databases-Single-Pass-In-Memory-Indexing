@@ -1,2 +1,0 @@
-('g', [('00chLpzhgVjxs1zKC9UScL', 1)])
-('j', [('00chLpzhgVjxs1zKC9UScL', 2)])

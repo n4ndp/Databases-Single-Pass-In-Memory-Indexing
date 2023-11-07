@@ -1,6 +1,8 @@
 import json
+import pandas as pd
 import sys
 import os
+from preprocessor import Preprocessor
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT_DIR = os.path.dirname(os.path.realpath(THIS_DIR))
@@ -8,10 +10,13 @@ DATA_DIR = ROOT_DIR + '/data/'
 BLOCKS_DIR = DATA_DIR + '/blocks/'
 
 class SPIMI:
-    def __init__(self, file_name_preprocessed, block_limit=10000):
+    def __init__(self, file_name, file_name_preprocessed, block_limit=10000):
         """
-        file_name_preprocessed: the name of the file containing the preprocessed data
+        file_name: the name of the file containing the data (not preprocessed)
         """
+        self.file_name = file_name
+        preprocessor = Preprocessor(file_name, file_name_preprocessed, stop_words=True)
+        preprocessor.preprocess()
         self.file_name_preprocessed = file_name_preprocessed
         self.block_limit = block_limit
 
@@ -187,10 +192,17 @@ class SPIMI:
         return merged_block_number, merged_block_list # Return the number of blocks created and the list of the blocks created
         
 if __name__ == "__main__": # Example usage
-    spimi = SPIMI("test.json", 200)
-    #print(spimi.spimi())
-    #print(spimi.list_blocks())
-    print(spimi.merge_blocks(["block0test.txt", "block2test.txt"], ["block1test.txt", "block3test.txt"], 0))
+    all_songs = pd.read_csv(DATA_DIR + "spotify_songs.csv")
+    english_songs = all_songs[all_songs["language"] == "en"] # Only use English songs
+    selected_columns = ["track_id", "track_name", "track_artist", "lyrics", "track_album_name", "playlist_name", "playlist_genre"] # Only use these columns
+    filtered_english_songs = english_songs[selected_columns]
+    test = filtered_english_songs.head(50) # Only use the first 50 songs for testing
+    test.to_csv(DATA_DIR + "spotify_songs_en_test.csv", index=False)
+
+    spimi = SPIMI("spotify_songs_en_test.csv", "spotify_songs_en_test.json", 10000)
+    print(spimi.spimi())
+    print(spimi.list_blocks())
+    #print(spimi.merge_blocks(["block0test.txt", "block2test.txt"], ["block1test.txt", "block3test.txt"], 0))
 
 
 

@@ -1,0 +1,7 @@
+nltk
+pandas
+psycopg2
+load_dotenv
+python-dotenv
+Flask
+requests

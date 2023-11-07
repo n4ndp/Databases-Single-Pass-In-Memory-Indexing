@@ -1,2 +1,0 @@
-('a', [('004s3t0ONYlzxII9PLgU6z', 3)])
-('b', [('004s3t0ONYlzxII9PLgU6z', 1)])
