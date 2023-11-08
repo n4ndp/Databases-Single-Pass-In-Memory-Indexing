@@ -11,7 +11,7 @@ DATA_DIR = ROOT_DIR + '/data/'
 BLOCKS_DIR = DATA_DIR + '/blocks/'
 
 class SPIMI:
-    def __init__(self, file_name, block_limit=10000):
+    def __init__(self, file_name, block_limit=100000):
         """
         file_name: the name of the file containing the data (not preprocessed)
         """
@@ -260,8 +260,9 @@ if __name__ == "__main__": # Example usage
     english_songs = all_songs[all_songs["language"] == "en"] # Only use English songs
     selected_columns = ["track_id", "track_name", "track_artist", "lyrics", "track_album_name", "playlist_name", "playlist_genre"] # Only use these columns
     filtered_english_songs = english_songs[selected_columns]
-    test = filtered_english_songs.head(50) # Only use the first 50 songs for testing
-    test.to_csv(DATA_DIR + "spotify_songs_en_test.csv", index=False)
+    #test = filtered_english_songs.head(50) # Only use the first 50 songs for testing
+    #test.to_csv(DATA_DIR + "spotify_songs_en_test.csv", index=False)
+    filtered_english_songs.to_csv(DATA_DIR + "spotify_songs_en.csv", index=False)
 
-    spimi = SPIMI("spotify_songs_en_test.csv")
+    spimi = SPIMI("spotify_songs_en.csv")
     spimi.start()
