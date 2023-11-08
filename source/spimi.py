@@ -11,14 +11,16 @@ DATA_DIR = ROOT_DIR + '/data/'
 BLOCKS_DIR = DATA_DIR + '/blocks/'
 
 class SPIMI:
-    def __init__(self, file_name, file_name_preprocessed, block_limit=10000):
+    def __init__(self, file_name, block_limit=10000):
         """
         file_name: the name of the file containing the data (not preprocessed)
         """
         self.file_name = file_name
-        preprocessor = Preprocessor(file_name, file_name_preprocessed, stop_words=True)
+        self.file_name_preprocessed = file_name[:-4] + ".json"
+        print("Preprocessing the data...") # Preprocess the data
+        preprocessor = Preprocessor(file_name, self.file_name_preprocessed, stop_words=True)
         preprocessor.preprocess()
-        self.file_name_preprocessed = file_name_preprocessed
+        print("Preprocessing done.") # Preprocessing done
         self.block_limit = block_limit
 
     def load_preprocessed_data(self):
@@ -56,7 +58,8 @@ class SPIMI:
         ("the",[(1,2)])
         ("that",[(2,2), (3,2)])
         """
-
+        
+        print("Apllying the SPIMI algorithm...") # Apply the SPIMI algorithm
         block_number = 0
         dictionary = {} # (term - postings list)
 
@@ -86,6 +89,7 @@ class SPIMI:
         if dictionary:
             self.write_block_to_disk(dictionary, "block", block_number)
             block_number += 1
+        print("SPIMI done.") # SPIMI done
 
         return block_number # Return the number of blocks created
 
@@ -222,38 +226,11 @@ class SPIMI:
     def merge(self):
         """Merges all the blocks."""
         blocks = self.list_blocks()
-        if len(blocks) == 1:
-            return blocks[0]
         
+        print("Merging the blocks for creating the global index...") # Merge the blocks for creating the global index
         # Merge the blocks in pairs
         controller = {int(block[5:-4]): [block] for block in blocks}
         merged_block_number = 0
-
-        """
-        controller = {
-            0: ["block0.txt"]
-            1: ["block1.txt"]
-            2: ["block2.txt"]
-            3: ["block3.txt"]
-            4: ["block4.txt"]
-        }
-
-        controller = {
-            0: ["local_index0.txt", "local_index1.txt"]
-            1: ["local_index2.txt", "local_index3.txt"]
-            2: ["local_index4.txt"]
-        }
-
-        controller = {
-            0: ["local_index0.txt", "local_index1.txt", "local_index2.txt", "local_index3.txt"]
-            1: ["local_index4.txt"]
-        }
-
-        controller = {
-            0: ["local_index0.txt", "local_index1.txt", "local_index2.txt", "local_index3.txt", "local_index4.txt"]
-        }
-        """
-        print(controller)
 
         while len(controller) > 1:
             new_controller = {}
@@ -267,28 +244,24 @@ class SPIMI:
 
             # Update the controller for the next iteration
             controller = new_controller
-            print(controller)
+
+        global_index = controller[0]
+        print("Merging done.") # Merging done
+
+        return global_index[0] # Return global index
+    
+    def start(self):
+        """Starts the SPIMI algorithm."""
+        self.spimi()
+        self.merge()
         
 if __name__ == "__main__": # Example usage
     all_songs = pd.read_csv(DATA_DIR + "spotify_songs.csv")
     english_songs = all_songs[all_songs["language"] == "en"] # Only use English songs
     selected_columns = ["track_id", "track_name", "track_artist", "lyrics", "track_album_name", "playlist_name", "playlist_genre"] # Only use these columns
     filtered_english_songs = english_songs[selected_columns]
-    test = filtered_english_songs.head(5) # Only use the first 5 songs for testing
+    test = filtered_english_songs.head(50) # Only use the first 50 songs for testing
     test.to_csv(DATA_DIR + "spotify_songs_en_test.csv", index=False)
 
-    spimi = SPIMI("spotify_songs_en_test.csv", "spotify_songs_en_test.json", 2000)
-    print(spimi.spimi())
-    """print(spimi.merge_blocks(0, ["block0.txt"], ["block1.txt"]))
-    print(spimi.merge_blocks(2, ["block2.txt"], ["block3.txt"]))
-    print(spimi.merge_blocks(4, ["block4.txt"], ["block5.txt"]))
-
-    print(spimi.merge_blocks(6, ['local_index0.txt', 'local_index1.txt'], ['local_index2.txt', 'local_index3.txt']))
-    print(spimi.merge_blocks(10, ['local_index4.txt', 'local_index5.txt'], []))
-
-    print(spimi.merge_blocks(12, ['local_index6.txt', 'local_index7.txt', 'local_index8.txt', 'local_index9.txt'], ['local_index10.txt', 'local_index11.txt']))"""
-    # Global Index [12,13,14,15,16]
-
-    #print(spimi.list_blocks())
-    #print(spimi.merge_blocks(0, ["block0.txt", "block1.txt"], []))
-    spimi.merge()
+    spimi = SPIMI("spotify_songs_en_test.csv")
+    spimi.start()
