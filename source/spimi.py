@@ -165,7 +165,7 @@ class SPIMI:
                 if block_line == "":
                     block.close()
                     # Delete the block file that was just read
-                    #os.remove(BLOCKS_DIR + block_names[i])
+                    os.remove(BLOCKS_DIR + block_names[i])
                     i += 1
                     if i < len(block_names):
                         block = open(BLOCKS_DIR + block_names[i], "r")
@@ -174,7 +174,7 @@ class SPIMI:
                 if other_block_line == "":
                     other_block.close()
                     # Delete the block file that was just read
-                    #os.remove(BLOCKS_DIR + other_block_names[j])
+                    os.remove(BLOCKS_DIR + other_block_names[j])
                     j += 1
                     if j < len(other_block_names):
                         other_block = open(BLOCKS_DIR + other_block_names[j], "r")
@@ -189,7 +189,7 @@ class SPIMI:
                 if other_block_line == "":
                     other_block.close()
                     # Delete the block file that was just read
-                    #os.remove(BLOCKS_DIR + other_block_names[j])
+                    os.remove(BLOCKS_DIR + other_block_names[j])
                     j += 1
                     if j < len(other_block_names):
                         other_block = open(BLOCKS_DIR + other_block_names[j], "r")
@@ -204,7 +204,7 @@ class SPIMI:
                 if block_line == "":
                     block.close()
                     # Delete the block file that was just read
-                    #os.remove(BLOCKS_DIR + block_names[i])
+                    os.remove(BLOCKS_DIR + block_names[i])
                     i += 1
                     if i < len(block_names):
                         block = open(BLOCKS_DIR + block_names[i], "r")
@@ -227,6 +227,7 @@ class SPIMI:
         
         # Merge the blocks in pairs
         controller = {int(block[5:-4]): [block] for block in blocks}
+        merged_block_number = 0
 
         """
         controller = {
@@ -252,9 +253,10 @@ class SPIMI:
             0: ["local_index0.txt", "local_index1.txt", "local_index2.txt", "local_index3.txt", "local_index4.txt"]
         }
         """
-        """while len(controller) > 1:
+        print(controller)
+
+        while len(controller) > 1:
             new_controller = {}
-            merged_block_number = 0
             i = 0
 
             # Merge blocks in pairs
@@ -264,8 +266,8 @@ class SPIMI:
                 i += 2
 
             # Update the controller for the next iteration
-            controller = new_controller"""
-
+            controller = new_controller
+            print(controller)
         
 if __name__ == "__main__": # Example usage
     all_songs = pd.read_csv(DATA_DIR + "spotify_songs.csv")
@@ -277,14 +279,16 @@ if __name__ == "__main__": # Example usage
 
     spimi = SPIMI("spotify_songs_en_test.csv", "spotify_songs_en_test.json", 2000)
     print(spimi.spimi())
-    print(spimi.merge_blocks(0, ["block0.txt"], ["block1.txt"]))
+    """print(spimi.merge_blocks(0, ["block0.txt"], ["block1.txt"]))
     print(spimi.merge_blocks(2, ["block2.txt"], ["block3.txt"]))
     print(spimi.merge_blocks(4, ["block4.txt"], ["block5.txt"]))
+
     print(spimi.merge_blocks(6, ['local_index0.txt', 'local_index1.txt'], ['local_index2.txt', 'local_index3.txt']))
     print(spimi.merge_blocks(10, ['local_index4.txt', 'local_index5.txt'], []))
-    print(spimi.merge_blocks(12, ['local_index6.txt', 'local_index7.txt', 'local_index8.txt', 'local_index9.txt'], ['local_index10.txt', 'local_index11.txt']))
+
+    print(spimi.merge_blocks(12, ['local_index6.txt', 'local_index7.txt', 'local_index8.txt', 'local_index9.txt'], ['local_index10.txt', 'local_index11.txt']))"""
     # Global Index [12,13,14,15,16]
 
     #print(spimi.list_blocks())
     #print(spimi.merge_blocks(0, ["block0.txt", "block1.txt"], []))
-    #spimi.merge()
+    spimi.merge()

@@ -1,5 +1,0 @@
-('world', [('00chLpzhgVjxs1zKC9UScL', 1)])
-('worri', [('00cqd6ZsSkLZqGMlQCR0Zo', 1)])
-('wrong', [('00chLpzhgVjxs1zKC9UScL', 1), ('00chLpzhgVjxs1zKC9UScL', 1)])
-('yeah', [('00chLpzhgVjxs1zKC9UScL', 2), ('00chLpzhgVjxs1zKC9UScL', 1)])
-('yo', [('00chLpzhgVjxs1zKC9UScL', 3)])
