@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+import ast
 import sys
 import os
 from preprocessor import Preprocessor
@@ -97,7 +98,7 @@ class SPIMI:
 
         return blocks # Return a list of the blocks created
 
-    def merge_blocks(self, block_names, other_block_names, merged_block_number):
+    def merge_blocks(self, merged_block_number, block_names, other_block_names):
         """
         block_names: a list of the names of the blocks to be merged
         other_block_names: a list of the names of the other blocks to be merged
@@ -113,7 +114,26 @@ class SPIMI:
             block = open(BLOCKS_DIR + block_names[0], "r")
             other_block = open(BLOCKS_DIR + other_block_names[0], "r")
         else:
-            return # ...
+            if block_names == [] and other_block_names != []:
+                # Rename all blocks in other_block_names to "local_index" + str(merged_block_number) + ".txt"
+                for other_block_name in other_block_names:
+                    os.rename(BLOCKS_DIR + other_block_name, BLOCKS_DIR + "local_index" + str(merged_block_number) + ".txt")
+                    merged_block_list.append("local_index" + str(merged_block_number) + ".txt")
+                    merged_block_number += 1
+
+                return merged_block_number, merged_block_list
+            
+            if other_block_names == [] and block_names != []:
+                # Rename all blocks in block_names to "local_index" + str(merged_block_number) + ".txt"
+                for block_name in block_names:
+                    os.rename(BLOCKS_DIR + block_name, BLOCKS_DIR + "local_index" + str(merged_block_number) + ".txt")
+                    merged_block_list.append("local_index" + str(merged_block_number) + ".txt")
+                    merged_block_number += 1
+
+                return merged_block_number, merged_block_list
+            
+            else:
+                return merged_block_number, []
 
         block_line = block.readline()
         other_block_line = other_block.readline()
@@ -121,14 +141,14 @@ class SPIMI:
 
         while True:
             if sys.getsizeof(merged_block) > self.block_limit:
-                    merged_block_list.append(self.write_block_to_disk(merged_block, "block_", merged_block_number, is_sorted=True))
+                    merged_block_list.append(self.write_block_to_disk(merged_block, "local_index", merged_block_number, is_sorted=True))
                     merged_block_number += 1
                     merged_block = {}
 
             # CASE 1: block_names and other_block_names are not empty
             if block_line != "" and other_block_line != "":
-                block_term_tuple = eval(block_line)
-                other_block_term_tuple = eval(other_block_line)
+                block_term_tuple = ast.literal_eval(block_line)
+                other_block_term_tuple = ast.literal_eval(other_block_line)
 
                 if block_term_tuple[0] == other_block_term_tuple[0]:
                     merged_postings_list = block_term_tuple[1] + other_block_term_tuple[1]
@@ -144,6 +164,8 @@ class SPIMI:
                 
                 if block_line == "":
                     block.close()
+                    # Delete the block file that was just read
+                    #os.remove(BLOCKS_DIR + block_names[i])
                     i += 1
                     if i < len(block_names):
                         block = open(BLOCKS_DIR + block_names[i], "r")
@@ -151,6 +173,8 @@ class SPIMI:
 
                 if other_block_line == "":
                     other_block.close()
+                    # Delete the block file that was just read
+                    #os.remove(BLOCKS_DIR + other_block_names[j])
                     j += 1
                     if j < len(other_block_names):
                         other_block = open(BLOCKS_DIR + other_block_names[j], "r")
@@ -158,12 +182,14 @@ class SPIMI:
             
             # CASE 2: block_line is empty
             elif block_line == "" and other_block_line != "":
-                other_block_term_tuple = eval(other_block_line)
+                other_block_term_tuple = ast.literal_eval(other_block_line)
                 merged_block[other_block_term_tuple[0]] = other_block_term_tuple[1]
                 other_block_line = other_block.readline()
 
                 if other_block_line == "":
                     other_block.close()
+                    # Delete the block file that was just read
+                    #os.remove(BLOCKS_DIR + other_block_names[j])
                     j += 1
                     if j < len(other_block_names):
                         other_block = open(BLOCKS_DIR + other_block_names[j], "r")
@@ -171,12 +197,14 @@ class SPIMI:
 
             # CASE 3: other_block_line is empty
             elif block_line != "" and other_block_line == "":
-                block_term_tuple = eval(block_line)
+                block_term_tuple = ast.literal_eval(block_line)
                 merged_block[block_term_tuple[0]] = block_term_tuple[1]
                 block_line = block.readline()
 
                 if block_line == "":
                     block.close()
+                    # Delete the block file that was just read
+                    #os.remove(BLOCKS_DIR + block_names[i])
                     i += 1
                     if i < len(block_names):
                         block = open(BLOCKS_DIR + block_names[i], "r")
@@ -186,23 +214,77 @@ class SPIMI:
                 break
         
         if merged_block:
-            merged_block_list.append(self.write_block_to_disk(merged_block, "block_", merged_block_number, is_sorted=True))
+            merged_block_list.append(self.write_block_to_disk(merged_block, "local_index", merged_block_number, is_sorted=True))
             merged_block_number += 1
         
         return merged_block_number, merged_block_list # Return the number of blocks created and the list of the blocks created
 
     def merge(self):
         """Merges all the blocks."""
+        blocks = self.list_blocks()
+        if len(blocks) == 1:
+            return blocks[0]
+        
+        # Merge the blocks in pairs
+        controller = {int(block[5:-4]): [block] for block in blocks}
+
+        """
+        controller = {
+            0: ["block0.txt"]
+            1: ["block1.txt"]
+            2: ["block2.txt"]
+            3: ["block3.txt"]
+            4: ["block4.txt"]
+        }
+
+        controller = {
+            0: ["local_index0.txt", "local_index1.txt"]
+            1: ["local_index2.txt", "local_index3.txt"]
+            2: ["local_index4.txt"]
+        }
+
+        controller = {
+            0: ["local_index0.txt", "local_index1.txt", "local_index2.txt", "local_index3.txt"]
+            1: ["local_index4.txt"]
+        }
+
+        controller = {
+            0: ["local_index0.txt", "local_index1.txt", "local_index2.txt", "local_index3.txt", "local_index4.txt"]
+        }
+        """
+        """while len(controller) > 1:
+            new_controller = {}
+            merged_block_number = 0
+            i = 0
+
+            # Merge blocks in pairs
+            while i < len(controller):
+                merged_block_number, merged_blocks_list = self.merge_blocks(merged_block_number, controller[i], controller[i + 1] if i + 1 < len(controller) else [])
+                new_controller[i // 2] = merged_blocks_list
+                i += 2
+
+            # Update the controller for the next iteration
+            controller = new_controller"""
+
         
 if __name__ == "__main__": # Example usage
     all_songs = pd.read_csv(DATA_DIR + "spotify_songs.csv")
     english_songs = all_songs[all_songs["language"] == "en"] # Only use English songs
     selected_columns = ["track_id", "track_name", "track_artist", "lyrics", "track_album_name", "playlist_name", "playlist_genre"] # Only use these columns
     filtered_english_songs = english_songs[selected_columns]
-    test = filtered_english_songs.head(10) # Only use the first 10 songs for testing
+    test = filtered_english_songs.head(5) # Only use the first 5 songs for testing
     test.to_csv(DATA_DIR + "spotify_songs_en_test.csv", index=False)
 
-    spimi = SPIMI("spotify_songs_en_test.csv", "spotify_songs_en_test.json", 10000)
+    spimi = SPIMI("spotify_songs_en_test.csv", "spotify_songs_en_test.json", 2000)
     print(spimi.spimi())
-    print(spimi.list_blocks())
-    #print(spimi.merge_blocks(["block0test.txt", "block2test.txt"], ["block1test.txt", "block3test.txt"], 0))
+    print(spimi.merge_blocks(0, ["block0.txt"], ["block1.txt"]))
+    print(spimi.merge_blocks(2, ["block2.txt"], ["block3.txt"]))
+    print(spimi.merge_blocks(4, ["block4.txt"], ["block5.txt"]))
+    print(spimi.merge_blocks(6, ['local_index0.txt', 'local_index1.txt'], ['local_index2.txt', 'local_index3.txt']))
+    print(spimi.merge_blocks(10, ['local_index4.txt', 'local_index5.txt'], []))
+    print(spimi.merge_blocks(12, ['local_index6.txt', 'local_index7.txt', 'local_index8.txt', 'local_index9.txt'], ['local_index10.txt', 'local_index11.txt']))
+    # Global Index [12,13,14,15,16]
+
+    #print(spimi.list_blocks())
+    #print(spimi.merge_blocks(0, ["block0.txt", "block1.txt"], []))
+    #spimi.merge()
