@@ -279,9 +279,9 @@ if __name__ == "__main__": # Example usage
     english_songs = all_songs[all_songs["language"] == "en"] # Only use English songs
     selected_columns = ["track_id", "track_name", "track_artist", "lyrics", "track_album_name", "playlist_name", "playlist_genre"] # Only use these columns
     filtered_english_songs = english_songs[selected_columns]
-    test = filtered_english_songs.head(50) # Only use the first 50 songs for testing
+    test = filtered_english_songs.head(500) # Only use the first 500 songs for testing
     test.to_csv(DATA_DIR + "spotify_songs_en.csv", index=False)
     #filtered_english_songs.to_csv(DATA_DIR + "spotify_songs_en.csv", index=False)
 
-    spimi = SPIMI("spotify_songs_en.csv", 4000)
+    spimi = SPIMI("spotify_songs_en.csv", 20000)
     spimi.start()
