@@ -101,6 +101,15 @@ class SPIMI:
                 blocks.append(file)
 
         return blocks # Return a list of the blocks created
+    
+    def list_global_index(self):
+        """Returns a list of the global index."""
+        global_index = []
+        for file in os.listdir(BLOCKS_DIR):
+            if file.startswith('local_index'):
+                global_index.append(file)
+
+        return global_index
 
     def merge_blocks(self, merged_block_number, block_names, other_block_names):
         """
@@ -254,15 +263,25 @@ class SPIMI:
         """Starts the SPIMI algorithm."""
         self.spimi()
         self.merge()
+        global_index = self.list_global_index() # List the global index, for example: ['local_index0.txt', 'local_index1.txt', 'local_index2.txt']
+        
+        # Create the global index file 
+        with open(BLOCKS_DIR + "global_index.txt", 'w') as global_index_file:
+            for local_index_filename in global_index:
+                with open(BLOCKS_DIR + local_index_filename, 'r') as local_index_file:
+                    content = local_index_file.read()
+                    global_index_file.write(content)
+
+        print("Global index created.") # Global index created
         
 if __name__ == "__main__": # Example usage
     all_songs = pd.read_csv(DATA_DIR + "spotify_songs.csv")
     english_songs = all_songs[all_songs["language"] == "en"] # Only use English songs
     selected_columns = ["track_id", "track_name", "track_artist", "lyrics", "track_album_name", "playlist_name", "playlist_genre"] # Only use these columns
     filtered_english_songs = english_songs[selected_columns]
-    #test = filtered_english_songs.head(50) # Only use the first 50 songs for testing
-    #test.to_csv(DATA_DIR + "spotify_songs_en_test.csv", index=False)
-    filtered_english_songs.to_csv(DATA_DIR + "spotify_songs_en.csv", index=False)
+    test = filtered_english_songs.head(50) # Only use the first 50 songs for testing
+    test.to_csv(DATA_DIR + "spotify_songs_en.csv", index=False)
+    #filtered_english_songs.to_csv(DATA_DIR + "spotify_songs_en.csv", index=False)
 
-    spimi = SPIMI("spotify_songs_en.csv")
+    spimi = SPIMI("spotify_songs_en.csv", 4000)
     spimi.start()
