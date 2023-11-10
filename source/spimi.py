@@ -4,11 +4,7 @@ import ast
 import sys
 import os
 from preprocessor import Preprocessor
-
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-ROOT_DIR = os.path.dirname(os.path.realpath(THIS_DIR))
-DATA_DIR = ROOT_DIR + '/data/'
-BLOCKS_DIR = DATA_DIR + '/blocks/'
+from paths import THIS_DIR, ROOT_DIR, DATA_DIR, BLOCKS_DIR
 
 class SPIMI:
     def __init__(self, file_name, block_limit=100000):
