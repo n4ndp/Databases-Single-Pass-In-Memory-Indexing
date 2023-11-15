@@ -8,7 +8,7 @@ nltk.download('punkt')
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
-from paths import THIS_DIR, ROOT_DIR, DATA_DIR, BLOCKS_DIR
+from paths import DATA_DIR
 
 class Preprocessor:
     def __init__(self, file_name_data, file_name_preprocessed, stop_words=False):
