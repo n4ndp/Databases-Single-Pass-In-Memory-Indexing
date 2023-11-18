@@ -50,3 +50,4 @@ SPIMI-Invert(token_stream):
 ```
 
 Merging of blocks is analogous to [BSBI](https://nlp.stanford.edu/IR-book/html/htmledition/blocked-sort-based-indexing-1.html) algorithm.
+
