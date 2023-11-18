@@ -15,12 +15,16 @@ class IndexInverted:
         """
         self.file_name_data = file_name_data
         self.number_of_dcouments = number_of_dcouments
+        self.number_of_tokens = 0 # The number of tokens in the inverted index
 
-        spimi = SPIMI(file_name_data)
-        if spimi.start()[0]:
-            print("SPIMI completed successfully")
+    def create_index_inverted(self):
+        """Creates the inverted index and writes it to disk."""
+        spimi = SPIMI(self.file_name_data).start() # Create the SPIMI object
+
+        if spimi[0]: # If SPIMI completed successfully
+            return True
         else:
-            print("SPIMI failed")
+            return False
 
     def write_norm_to_disk(self):
         """Writes the norm of each document to disk."""
@@ -38,9 +42,7 @@ class IndexInverted:
 
         with open(DATA_DIR + "norms.bin", "wb") as file_norms:
             for document_id, norm in sorted(norms.items()):
-                norm = round(np.sqrt(norm), 6)
-
-                print("Writing norm of document {} to disk".format(document_id))
+                norm = round(np.sqrt(norm), 6) # Round to 6 decimal places
 
                 id_encode = document_id.encode("utf-8") # Encode the document id
                 norm_encode = struct.pack("f", norm)
@@ -50,8 +52,37 @@ class IndexInverted:
 
     def search_term(self, token):
         """Returns the postings list of a token using binary search."""
-        with open(BLOCKS_DIR + "global_index.txt", "r") as file_global_index, open(BLOCKS_DIR + "metadata.txt", "r") as file_metadata:
-            pass
+        with open(BLOCKS_DIR + "global_index.txt", "r") as file_global_index, open(BLOCKS_DIR + "metadata.bin", "rb") as file_metadata:
+            low = 0
+            high = file_metadata.seek(0, os.SEEK_END) // struct.calcsize("i") - 1 # Get the number of tokens in the file
+
+            result = None
+
+            while low <= high:
+                mid = (low + high) // 2
+
+                # struct.calcsize("i") is the size of an integer in bytes
+                file_metadata.seek(mid * struct.calcsize("i"))
+                physical_position = struct.unpack("i", file_metadata.read(struct.calcsize("i")))[0] # Get the physical position of the token in the file
+
+                file_global_index.seek(physical_position)
+                line = file_global_index.readline() # Get the line at the current position in the file
+                other_token = ast.literal_eval(line)[0] # Get the token at the current position
+
+                if token < other_token:
+                    high = mid - 1
+                elif token > other_token:
+                    low = mid + 1
+                else:
+                    postings_list = ast.literal_eval(line)[1] # Get the postings list
+                    result = postings_list
+                    break
+
+            return result # Return the postings list of the token if found, otherwise None
+
+    def search_norm(self, document_id):
+        """Returns the norm of a document."""
+        pass
 
 if __name__ == "__main__":
     all_songs = pd.read_csv(DATA_DIR + "spotify_songs.csv")
@@ -62,5 +93,8 @@ if __name__ == "__main__":
     filtered_english_songs_sorted.to_csv(DATA_DIR + "spotify_songs_en.csv", index=False)
 
     file_name_data = "spotify_songs_en.csv"
-    index_inverted = IndexInverted(file_name_data, 15405)
-    index_inverted.write_norm_to_disk()
+    data_size = 15405
+    index_inverted = IndexInverted(file_name_data, data_size)
+    #index_inverted.create_index_inverted()
+    #index_inverted.write_norm_to_disk()
+    print(index_inverted.search_term("lovefool"))

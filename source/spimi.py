@@ -3,6 +3,7 @@ import pandas as pd
 import ast
 import sys
 import os
+import struct
 from preprocessor import Preprocessor
 from paths import DATA_DIR, BLOCKS_DIR
 
@@ -221,14 +222,14 @@ class SPIMI:
         blocks = self.spimi() # Apply the SPIMI algorithm
         global_index = self.merge(blocks) # Merge the blocks
         
-        with open(BLOCKS_DIR + "global_index.txt", 'w') as global_index_file, open(BLOCKS_DIR + "metadata.txt", 'w') as metadata_file:
+        with open(BLOCKS_DIR + "global_index.txt", 'w') as global_index_file, open(BLOCKS_DIR + "metadata.bin", 'wb') as metadata_file:
             physical_position = 0 # Physical position of the term in the global index
             for local_index_filename in global_index:
                 with open(BLOCKS_DIR + local_index_filename, 'r') as local_index_file:
                     for line in local_index_file:
                         global_index_file.write(line)
                         token_number += 1 # Increment the number of tokens
-                        metadata_file.write(str(physical_position) + '\n')
+                        metadata_file.write(struct.pack("i", physical_position)) # Write the physical position of the term in the global index
                         physical_position = global_index_file.tell() # Update the physical position
 
                 os.remove(BLOCKS_DIR + local_index_filename) # Delete the local index file
