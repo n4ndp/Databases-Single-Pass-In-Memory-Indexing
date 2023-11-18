@@ -17,7 +17,7 @@ class IndexInverted:
         self.number_of_dcouments = number_of_dcouments
 
         spimi = SPIMI(file_name_data)
-        if spimi.start():
+        if spimi.start()[0]:
             print("SPIMI completed successfully")
         else:
             print("SPIMI failed")
@@ -48,6 +48,10 @@ class IndexInverted:
                 file_norms.write(id_encode)
                 file_norms.write(norm_encode)
 
+    def search_term(self, token):
+        """Returns the postings list of a token using binary search."""
+        with open(BLOCKS_DIR + "global_index.txt", "r") as file_global_index, open(BLOCKS_DIR + "metadata.txt", "r") as file_metadata:
+            pass
 
 if __name__ == "__main__":
     all_songs = pd.read_csv(DATA_DIR + "spotify_songs.csv")
