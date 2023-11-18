@@ -28,11 +28,11 @@ class SPIMI:
 
         with open(BLOCKS_DIR + block_name + str(block_number) + '.txt', 'w') as file:
             if is_sorted:
-                for term in dictionary.keys():
-                    file.write(str((term, dictionary[term])) + '\n')
+                for term, postings_list in dictionary.items():
+                    file.write(str((term, postings_list)) + '\n')
             else:
-                for term in sorted(dictionary.keys()):
-                    file.write(str((term, dictionary[term])) + '\n')
+                for term, postings_list in sorted(dictionary.items()):
+                    file.write(str((term, postings_list)) + '\n')
 
         return block_name + str(block_number) + '.txt' # Return the name of the block created
 
