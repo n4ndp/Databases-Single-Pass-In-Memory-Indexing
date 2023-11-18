@@ -65,9 +65,9 @@ if __name__ == "__main__": # Example usage
     selected_columns = ["track_id", "track_name", "track_artist", "lyrics", "track_album_name", "playlist_name", "playlist_genre"] # Only use these columns
     filtered_english_songs = english_songs[selected_columns]
     test = filtered_english_songs.head(3) # Only use the first 3 songs for testing
-    test.to_csv(DATA_DIR + "spotify_songs_es_3.csv", index=False)
+    test.to_csv(DATA_DIR + "spotify_songs_en_3.csv", index=False)
 
-    preprocessor = Preprocessor("spotify_songs_es_3.csv", stop_words=True)
+    preprocessor = Preprocessor("spotify_songs_en_3.csv", stop_words=True)
 
     # Iterate through the token stream and print tokens
     for track_id, token in preprocessor.token_stream():

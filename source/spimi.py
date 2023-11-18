@@ -7,25 +7,22 @@ from preprocessor import Preprocessor
 from paths import DATA_DIR, BLOCKS_DIR
 
 class SPIMI:
-    def __init__(self, file_name, block_limit=100000):
+    def __init__(self, file_name_data, block_limit=1000000):
         """
         file_name: the name of the file containing the data (not preprocessed)
+        block_limit: the maximum size of a block in bytes
         """
-        self.file_name = file_name
-        self.file_name_preprocessed = file_name[:-4] + ".json"
-        print("Preprocessing the data...") # Preprocess the data
-        preprocessor = Preprocessor(file_name, self.file_name_preprocessed, stop_words=True)
-        preprocessor.preprocess()
-        print("Preprocessing done.") # Preprocessing done
+        self.file_name_data = file_name_data
+        self.file_name = file_name_data[:-4]
         self.block_limit = block_limit
 
-    def load_preprocessed_data(self):
-        """Load the preprocessed data from the JSON file."""
-        with open(DATA_DIR + self.file_name_preprocessed) as file:
-            data = json.load(file)
-        return data
-    
     def write_block_to_disk(self, dictionary, block_name, block_number, is_sorted=False):
+        """
+        dictionary: the dictionary to be written to disk
+        block_name: the name of the block to be written to disk
+        block_number: the number of the block to be written to disk
+        is_sorted: whether the dictionary is sorted or not
+        """
         """Saves the block to a text file."""
         if not os.path.exists(BLOCKS_DIR):
             os.makedirs(BLOCKS_DIR)
@@ -42,120 +39,86 @@ class SPIMI:
 
     def spimi(self):
         """Applies the Single-pass in-memory indexing algorithm to the preprocessed data."""
-        data = self.load_preprocessed_data()
-        # json file with songs preprocessed
-        """
-        [{"track_id": "1", "track_processed": ["Shape", "of", "You", "Ed", "Sheeran", "The", "club", "isn't", "the", "best", "place", "to", "find", "a", "lover", "So", "the", "bar", "is", "where", "I", "go"]}, 
-        {"track_id": "2", "track_processed": ["Someone", "Like", "You", "Adele", "I", "heard", "that", "you're", "settled", "down", "That", "you", "found", "a", "girl", "and", "you're", "married", "now"]},
-        {"track_id": "3", "track_processed": ["Uptown", "Funk", "Mark", "Ronson", "ft.", "Bruno", "Mars", "This", "hit,", "that", "ice", "cold", "Michelle", "Pfeiffer,", "that", "white", "gold"]}]
-        """
-        # blockX.txt with X = 0, 1, 2, ...
-        """
-        ("the",[(1,2)])
-        ("that",[(2,2), (3,2)])
-        """
-        
-        print("Apllying the SPIMI algorithm...") # Apply the SPIMI algorithm
         block_number = 0
+        block_list = []
         dictionary = {} # (term - postings list)
 
-        for song in data:
-            track_id = song["track_id"]
-            tokens = song["track_processed"]
-        
-            for token in tokens:
-                if token not in dictionary:
-                    dictionary[token] = [(track_id, 1)]
-                else: # token already in dictionary
-                    postings_list = dictionary[token]
+        preprocessor = Preprocessor(self.file_name_data) # Preprocess the data
 
-                    if postings_list[-1][0] == track_id:
-                        postings_list[-1] = (track_id, postings_list[-1][1] + 1)
-                    else: # different track_id
-                        postings_list.append((track_id, 1))
-                    
-                    dictionary[token] = postings_list # update postings list
+        for track_id, token in preprocessor.token_stream():
+            if token not in dictionary:
+                dictionary[token] = [(track_id, 1)] # Add the token to the dictionary with the track_id and the frequency
+            else: # token already in dictionary
+                postings_list = dictionary[token]
 
-                if sys.getsizeof(dictionary) > self.block_limit:
-                    self.write_block_to_disk(dictionary, "block", block_number)
-                    block_number += 1
-                    dictionary = {} # reset dictionary
+                if postings_list[-1][0] == track_id:
+                    postings_list[-1] = (track_id, postings_list[-1][1] + 1) # Update the frequency
+                else: # different track_id
+                    postings_list.append((track_id, 1))
+
+                dictionary[token] = postings_list # update postings list
+
+            if sys.getsizeof(dictionary) > self.block_limit:
+                block_list.append(self.write_block_to_disk(dictionary, "block", block_number)) # Write the block to disk
+                block_number += 1 # Increment block number
+                dictionary = {} # reset dictionary
 
         # Write the last block to disk
         if dictionary:
-            self.write_block_to_disk(dictionary, "block", block_number)
-            block_number += 1
-        print("SPIMI done.") # SPIMI done
+            block_list.append(self.write_block_to_disk(dictionary, "block", block_number))
 
-        return block_number # Return the number of blocks created
-
-    def list_blocks(self):
-        """Returns a list of the blocks."""
-        blocks = []
-        for file in os.listdir(BLOCKS_DIR):
-            if file.startswith('block'):
-                blocks.append(file)
-
-        return blocks # Return a list of the blocks created
-    
-    def list_global_index(self):
-        """Returns a list of the global index."""
-        global_index = []
-        for file in os.listdir(BLOCKS_DIR):
-            if file.startswith('local_index'):
-                global_index.append(file)
-
-        return global_index
+        return block_list # Return the list of blocks created
 
     def merge_blocks(self, merged_block_number, block_names, other_block_names):
         """
+        merged_block_number: the number of previously created blocks
         block_names: a list of the names of the blocks to be merged
         other_block_names: a list of the names of the other blocks to be merged
         """
         """Merges two blocks."""
         merged_block = {} # Merge the two blocks
-        merged_block_list = []
+        merged_block_list = [] # List of blocks created
 
         block = None
         other_block = None
 
-        if block_names and other_block_names:
+        # Open the blocks to be merged
+        if block_names and other_block_names: # Both lists are not empty
             block = open(BLOCKS_DIR + block_names[0], "r")
             other_block = open(BLOCKS_DIR + other_block_names[0], "r")
-        else:
-            if block_names == [] and other_block_names != []:
-                # Rename all blocks in other_block_names to "local_index" + str(merged_block_number) + ".txt"
-                for other_block_name in other_block_names:
-                    os.rename(BLOCKS_DIR + other_block_name, BLOCKS_DIR + "local_index" + str(merged_block_number) + ".txt")
-                    merged_block_list.append("local_index" + str(merged_block_number) + ".txt")
-                    merged_block_number += 1
 
-                return merged_block_number, merged_block_list
-            
-            if other_block_names == [] and block_names != []:
-                # Rename all blocks in block_names to "local_index" + str(merged_block_number) + ".txt"
-                for block_name in block_names:
-                    os.rename(BLOCKS_DIR + block_name, BLOCKS_DIR + "local_index" + str(merged_block_number) + ".txt")
-                    merged_block_list.append("local_index" + str(merged_block_number) + ".txt")
-                    merged_block_number += 1
+        elif block_names: # Only block_names is not empty
+            # Rename all blocks in block_names to "local_index" + str(merged_block_number) + ".txt"
+            for block_name in block_names:
+                os.rename(BLOCKS_DIR + block_name, BLOCKS_DIR + "local_index" + str(merged_block_number) + ".txt")
+                merged_block_list.append("local_index" + str(merged_block_number) + ".txt")
+                merged_block_number += 1
+            return merged_block_number, merged_block_list # Return the list of blocks "created"
 
-                return merged_block_number, merged_block_list
-            
-            else:
-                return merged_block_number, []
+        elif other_block_names: # Only other_block_names is not empty
+            # Rename all blocks in other_block_names to "local_index" + str(merged_block_number) + ".txt"
+            for block_name in other_block_names:
+                os.rename(BLOCKS_DIR + block_name, BLOCKS_DIR + "local_index" + str(merged_block_number) + ".txt")
+                merged_block_list.append("local_index" + str(merged_block_number) + ".txt")
+                merged_block_number += 1
+            return merged_block_number, merged_block_list # Return the list of blocks "created"
 
+        else: # Both lists are empty
+            return merged_block_number, merged_block_list
+
+        # Merge the blocks
         block_line = block.readline()
         other_block_line = other_block.readline()
         i, j = 0, 0 # index for block_names and other_block_names
 
         while True:
             if sys.getsizeof(merged_block) > self.block_limit:
-                    merged_block_list.append(self.write_block_to_disk(merged_block, "local_index", merged_block_number, is_sorted=True))
+                    merged_block_list.append(self.write_block_to_disk(merged_block, "local_index", merged_block_number, is_sorted=True)) # Write the block to disk
                     merged_block_number += 1
                     merged_block = {}
 
             # CASE 1: block_names and other_block_names are not empty
-            if block_line != "" and other_block_line != "":
+            if block_line and other_block_line:
                 block_term_tuple = ast.literal_eval(block_line)
                 other_block_term_tuple = ast.literal_eval(other_block_line)
 
@@ -190,7 +153,7 @@ class SPIMI:
                         other_block_line = other_block.readline()
             
             # CASE 2: block_line is empty
-            elif block_line == "" and other_block_line != "":
+            elif other_block_line:
                 other_block_term_tuple = ast.literal_eval(other_block_line)
                 merged_block[other_block_term_tuple[0]] = other_block_term_tuple[1]
                 other_block_line = other_block.readline()
@@ -205,7 +168,7 @@ class SPIMI:
                         other_block_line = other_block.readline()
 
             # CASE 3: other_block_line is empty
-            elif block_line != "" and other_block_line == "":
+            elif block_line:
                 block_term_tuple = ast.literal_eval(block_line)
                 merged_block[block_term_tuple[0]] = block_term_tuple[1]
                 block_line = block.readline()
@@ -223,20 +186,20 @@ class SPIMI:
                 break
         
         if merged_block:
-            merged_block_list.append(self.write_block_to_disk(merged_block, "local_index", merged_block_number, is_sorted=True))
+            merged_block_list.append(self.write_block_to_disk(merged_block, "local_index", merged_block_number, is_sorted=True)) # Write the block to disk
             merged_block_number += 1
         
         return merged_block_number, merged_block_list # Return the number of blocks created and the list of the blocks created
 
-    def merge(self):
+    def merge(self, spimi_blocks):
+        """
+        spimi_blocks: a list of the names of the blocks created by the spimi algorithm
+        """
         """Merges all the blocks."""
-        blocks = self.list_blocks()
-        
-        print("Merging the blocks for creating the global index...") # Merge the blocks for creating the global index
-        # Merge the blocks in pairs
-        controller = {int(block[5:-4]): [block] for block in blocks}
         merged_block_number = 0
+        controller = {int(block[5:-4]): [block] for block in spimi_blocks}
 
+        # Merge the blocks in pairs
         while len(controller) > 1:
             new_controller = {}
             i = 0
@@ -251,33 +214,33 @@ class SPIMI:
             controller = new_controller
 
         global_index = controller[0]
-        print("Merging done.") # Merging done
+        return global_index # Return the global index
 
-        return global_index[0] # Return global index
-    
     def start(self):
-        """Starts the SPIMI algorithm."""
-        self.spimi()
-        self.merge()
-        global_index = self.list_global_index() # List the global index, for example: ['local_index0.txt', 'local_index1.txt', 'local_index2.txt']
+        """Start the SPIMI algorithm and merges the blocks to obtain the global index."""
+        blocks = self.spimi() # Apply the SPIMI algorithm
+        global_index = self.merge(blocks) # Merge the blocks
         
-        # Create the global index file 
-        with open(BLOCKS_DIR + "global_index.txt", 'w') as global_index_file:
+        with open(BLOCKS_DIR + "global_index.txt", 'w') as global_index_file, open(BLOCKS_DIR + "metadata.txt", 'w') as metadata_file:
+            physical_position = 0 # Physical position of the term in the global index
             for local_index_filename in global_index:
                 with open(BLOCKS_DIR + local_index_filename, 'r') as local_index_file:
-                    content = local_index_file.read()
-                    global_index_file.write(content)
+                    for line in local_index_file:
+                        global_index_file.write(line)
+                        metadata_file.write(str(physical_position) + '\n')
+                        physical_position = global_index_file.tell() # Update the physical position
 
-        print("Global index created.") # Global index created
-        
+                os.remove(BLOCKS_DIR + local_index_filename) # Delete the local index file
+
+        return True # Return True if the algorithm was successful
+
 if __name__ == "__main__": # Example usage
     all_songs = pd.read_csv(DATA_DIR + "spotify_songs.csv")
     english_songs = all_songs[all_songs["language"] == "en"] # Only use English songs
     selected_columns = ["track_id", "track_name", "track_artist", "lyrics", "track_album_name", "playlist_name", "playlist_genre"] # Only use these columns
     filtered_english_songs = english_songs[selected_columns]
-    test = filtered_english_songs.head(500) # Only use the first 500 songs for testing
-    test.to_csv(DATA_DIR + "spotify_songs_en.csv", index=False)
-    #filtered_english_songs.to_csv(DATA_DIR + "spotify_songs_en.csv", index=False)
+    test = filtered_english_songs.head(3) # Only use the first 3 songs for testing
+    test.to_csv(DATA_DIR + "spotify_songs_en_3.csv", index=False)
 
-    spimi = SPIMI("spotify_songs_en.csv", 20000)
-    spimi.start()
+    spimi = SPIMI("spotify_songs_en_3.csv")
+    print(spimi.start())
