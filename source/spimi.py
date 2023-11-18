@@ -7,13 +7,12 @@ from preprocessor import Preprocessor
 from paths import DATA_DIR, BLOCKS_DIR
 
 class SPIMI:
-    def __init__(self, file_name_data, block_limit=1000000):
+    def __init__(self, file_name_data, block_limit=200000):
         """
-        file_name: the name of the file containing the data (not preprocessed)
+        file_name_data: the name of the file containing the data (csv)
         block_limit: the maximum size of a block in bytes
         """
         self.file_name_data = file_name_data
-        self.file_name = file_name_data[:-4]
         self.block_limit = block_limit
 
     def write_block_to_disk(self, dictionary, block_name, block_number, is_sorted=False):
@@ -43,7 +42,7 @@ class SPIMI:
         block_list = []
         dictionary = {} # (term - postings list)
 
-        preprocessor = Preprocessor(self.file_name_data) # Preprocess the data
+        preprocessor = Preprocessor(self.file_name_data, stop_words=True) # Preprocess the data
 
         for track_id, token in preprocessor.token_stream():
             if token not in dictionary:
@@ -239,8 +238,6 @@ if __name__ == "__main__": # Example usage
     english_songs = all_songs[all_songs["language"] == "en"] # Only use English songs
     selected_columns = ["track_id", "track_name", "track_artist", "lyrics", "track_album_name", "playlist_name", "playlist_genre"] # Only use these columns
     filtered_english_songs = english_songs[selected_columns]
-    test = filtered_english_songs.head(3) # Only use the first 3 songs for testing
-    test.to_csv(DATA_DIR + "spotify_songs_en_3.csv", index=False)
-
-    spimi = SPIMI("spotify_songs_en_3.csv")
+    filtered_english_songs.to_csv(DATA_DIR + "spotify_songs_en.csv", index=False)
+    spimi = SPIMI("spotify_songs_en.csv")
     print(spimi.start())
