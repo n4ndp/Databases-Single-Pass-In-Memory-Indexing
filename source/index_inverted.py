@@ -9,16 +9,20 @@ from spimi import SPIMI
 from paths import DATA_DIR, BLOCKS_DIR
 
 class IndexInverted:
-    def __init__(self, file_name_data, number_of_dcouments):
+    def __init__(self, file_name_data, number_of_dcouments, block_limit=200000, stop_words=False):
         """
         file_name_data: the name of the file containing the data (csv)
+        number_of_dcouments: the number of documents in the data
+        block_limit: the maximum size of a block in bytes
         """
         self.file_name_data = file_name_data
         self.number_of_dcouments = number_of_dcouments
+        self.block_limit = block_limit
+        self.stop_words = stop_words
 
     def create_index_inverted(self):
         """Creates the inverted index and writes it to disk."""
-        spimi = SPIMI(self.file_name_data).start() # Create the SPIMI object
+        spimi = SPIMI(self.file_name_data, block_limit=self.block_limit, stop_words=self.stop_words).start() # Create the SPIMI object
 
         if spimi: # If SPIMI completed successfully
             return True

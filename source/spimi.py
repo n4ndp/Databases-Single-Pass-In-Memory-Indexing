@@ -8,13 +8,14 @@ from preprocessor import Preprocessor
 from paths import DATA_DIR, BLOCKS_DIR
 
 class SPIMI:
-    def __init__(self, file_name_data, block_limit=200000):
+    def __init__(self, file_name_data, block_limit=200000, stop_words=False):
         """
         file_name_data: the name of the file containing the data (csv)
         block_limit: the maximum size of a block in bytes
         """
         self.file_name_data = file_name_data
         self.block_limit = block_limit
+        self.stop_words = stop_words
 
     def write_block_to_disk(self, dictionary, block_name, block_number, is_sorted=False):
         """
@@ -43,7 +44,7 @@ class SPIMI:
         block_list = []
         dictionary = {} # (term - postings list)
 
-        preprocessor = Preprocessor(self.file_name_data, stop_words=True) # Preprocess the data
+        preprocessor = Preprocessor(self.file_name_data, stop_words=self.stop_words) # Preprocess the data
 
         for track_id, token in preprocessor.token_stream():
             if token not in dictionary:
