@@ -6,6 +6,7 @@ import os
 import struct
 import numpy as np
 from spimi import SPIMI
+from preprocessor import Preprocessor
 from paths import DATA_DIR, BLOCKS_DIR
 
 class IndexInverted:
@@ -108,6 +109,13 @@ class IndexInverted:
                     break
 
             return result # Return the norm of the document if found, otherwise None
+        
+    def consult_query(self, query, topk):
+        """Returns the top k documents for a given query."""
+
+
+
+
 
 if __name__ == "__main__":
     all_songs = pd.read_csv(DATA_DIR + "spotify_songs.csv")
@@ -121,7 +129,8 @@ if __name__ == "__main__":
     file_name_data = "spotify_songs_en.csv"
     data_size = 5
     index_inverted = IndexInverted(file_name_data, data_size, block_limit=2000)
-    index_inverted.create_index_inverted()
-    index_inverted.write_norm_to_disk()
-    print(index_inverted.search_term("lovefool"))
-    print(index_inverted.search_norm("00Z0GIRi0l7WqQnQJCo5S2"))
+    #index_inverted.create_index_inverted()
+    #index_inverted.write_norm_to_disk()
+    #print(index_inverted.search_term("yeah"))
+    #print(index_inverted.search_norm("00cqd6ZsSkLZqGMlQCR0Zo"))
+    index_inverted.consult_query("The trees, are singing in the wind The sky blue", 5)
