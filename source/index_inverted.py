@@ -9,11 +9,10 @@ from spimi import SPIMI
 from paths import DATA_DIR, BLOCKS_DIR
 
 class IndexInverted:
-    def __init__(self, file_name_data, number_of_dcouments, block_limit=200000, stop_words=False):
+    def __init__(self, file_name_data, number_of_dcouments, block_limit=200000, stop_words=True):
         """
         file_name_data: the name of the file containing the data (csv)
         number_of_dcouments: the number of documents in the data
-        block_limit: the maximum size of a block in bytes
         """
         self.file_name_data = file_name_data
         self.number_of_dcouments = number_of_dcouments
@@ -115,12 +114,13 @@ if __name__ == "__main__":
     english_songs = all_songs[all_songs["language"] == "en"] # Only use English songs
     selected_columns = ["track_id", "track_name", "track_artist", "lyrics", "track_album_name", "playlist_name", "playlist_genre"] # Only use these columns
     filtered_english_songs = english_songs[selected_columns]
+    filtered_english_songs = filtered_english_songs.head(5) # Only use the first 5 songs for testing
     filtered_english_songs_sorted = filtered_english_songs.sort_values(by='track_id')
     filtered_english_songs_sorted.to_csv(DATA_DIR + "spotify_songs_en.csv", index=False)
 
     file_name_data = "spotify_songs_en.csv"
-    data_size = 15405
-    index_inverted = IndexInverted(file_name_data, data_size)
+    data_size = 5
+    index_inverted = IndexInverted(file_name_data, data_size, block_limit=2000)
     index_inverted.create_index_inverted()
     index_inverted.write_norm_to_disk()
     print(index_inverted.search_term("lovefool"))

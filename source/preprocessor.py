@@ -11,7 +11,7 @@ from nltk.stem import PorterStemmer
 from paths import DATA_DIR
 
 class Preprocessor:
-    def __init__(self, file_name_data, stop_words=False):
+    def __init__(self, file_name_data, stop_words=True):
         """
         file_name_data: the name of the file containing the data (csv)
         stop_words: a boolean indicating whether to remove stop words
@@ -67,7 +67,7 @@ if __name__ == "__main__": # Example usage
     test = filtered_english_songs.head(3) # Only use the first 3 songs for testing
     test.to_csv(DATA_DIR + "spotify_songs_en_3.csv", index=False)
 
-    preprocessor = Preprocessor("spotify_songs_en_3.csv", stop_words=True)
+    preprocessor = Preprocessor("spotify_songs_en_3.csv")
 
     # Iterate through the token stream and print tokens
     for track_id, token in preprocessor.token_stream():

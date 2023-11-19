@@ -8,7 +8,7 @@ from preprocessor import Preprocessor
 from paths import DATA_DIR, BLOCKS_DIR
 
 class SPIMI:
-    def __init__(self, file_name_data, block_limit=200000, stop_words=False):
+    def __init__(self, file_name_data, block_limit=200000, stop_words=True):
         """
         file_name_data: the name of the file containing the data (csv)
         block_limit: the maximum size of a block in bytes
