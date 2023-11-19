@@ -218,7 +218,6 @@ class SPIMI:
 
     def start(self):
         """Start the SPIMI algorithm and merges the blocks to obtain the global index."""
-        token_number = 0 # Number of tokens in the data
         blocks = self.spimi() # Apply the SPIMI algorithm
         global_index = self.merge(blocks) # Merge the blocks
         
@@ -228,13 +227,12 @@ class SPIMI:
                 with open(BLOCKS_DIR + local_index_filename, 'r') as local_index_file:
                     for line in local_index_file:
                         global_index_file.write(line)
-                        token_number += 1 # Increment the number of tokens
                         metadata_file.write(struct.pack("i", physical_position)) # Write the physical position of the term in the global index
                         physical_position = global_index_file.tell() # Update the physical position
 
                 os.remove(BLOCKS_DIR + local_index_filename) # Delete the local index file
 
-        return True, token_number # Return True if the algorithm was successful
+        return True # Return True if the algorithm was successful
 
 if __name__ == "__main__": # Example usage
     all_songs = pd.read_csv(DATA_DIR + "spotify_songs.csv")
