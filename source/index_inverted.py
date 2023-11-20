@@ -111,7 +111,7 @@ class IndexInverted:
 
             return result # Return the norm of the document if found, otherwise None
         
-    def consult_query(self, query, topk):
+    def cosine_similarity(self, query, topk):
         """Returns the top k documents for a given query."""
         scores = {} # Dictionary of document id to score
 
@@ -161,5 +161,5 @@ if __name__ == "__main__":
     index_inverted = IndexInverted(file_name_data, data_size, block_limit=2000)
     #index_inverted.create_index_inverted()
     #index_inverted.write_norm_to_disk()
-    ids = index_inverted.consult_query("The trees, are singing in the wind The sky blue", 1)
-    print(ids)
+    documents = index_inverted.cosine_similarity("The trees, are singing in the wind The sky blue", 4)
+    print(documents)
