@@ -26,9 +26,7 @@ class IndexInverted:
         spimi = SPIMI(self.file_name_data, block_limit=self.block_limit, stop_words=self.stop_words).start() # Create the SPIMI object
 
         if spimi: # If SPIMI completed successfully
-            return True
-        else: # If SPIMI failed
-            return False
+            self.write_norm_to_disk()
 
     def write_norm_to_disk(self):
         """Writes the norm of each document to disk."""
@@ -159,7 +157,6 @@ if __name__ == "__main__":
     file_name_data = "spotify_songs_en.csv"
     data_size = 100
     index_inverted = IndexInverted(file_name_data, data_size, block_limit=2000)
-    #index_inverted.create_index_inverted()
-    #index_inverted.write_norm_to_disk()
+    index_inverted.create_index_inverted()
     documents = index_inverted.cosine_similarity("The trees, are singing in the wind The sky blue", 4)
     print(documents)
