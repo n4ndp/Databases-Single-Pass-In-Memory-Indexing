@@ -143,9 +143,9 @@ class IndexInverted:
             else:
                 scores[document_id] = 0
 
-        topk_documents = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:topk] # Sort the documents by score and get the top k documents
+        topk_documents = sorted(scores, key=scores.get, reverse=True)[:topk] # Get the top k documents
 
-        return topk_documents # Return the top k documents
+        return topk_documents # Return the top k documents for the query
 
 if __name__ == "__main__":
     all_songs = pd.read_csv(DATA_DIR + "spotify_songs.csv")
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     file_name_data = "spotify_songs_en.csv"
     data_size = 100
     index_inverted = IndexInverted(file_name_data, data_size, block_limit=2000)
-    index_inverted.create_index_inverted()
-    index_inverted.write_norm_to_disk()
-    result = index_inverted.consult_query("The trees, are singing in the wind The sky blue", 1)
-    print(result)
+    #index_inverted.create_index_inverted()
+    #index_inverted.write_norm_to_disk()
+    ids = index_inverted.consult_query("The trees, are singing in the wind The sky blue", 1)
+    print(ids)
