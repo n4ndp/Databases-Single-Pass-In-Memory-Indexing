@@ -156,7 +156,7 @@ if __name__ == "__main__":
 
     file_name_data = "spotify_songs_en.csv"
     data_size = 100
-    index_inverted = IndexInverted(file_name_data, data_size, block_limit=2000)
+    index_inverted = IndexInverted(file_name_data, data_size, block_limit=2000, stop_words=True)
     index_inverted.create_index_inverted()
     documents = index_inverted.cosine_similarity("The trees, are singing in the wind The sky blue", 4)
     print(documents)
