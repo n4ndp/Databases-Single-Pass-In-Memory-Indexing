@@ -5,6 +5,7 @@ import sys
 import os
 import struct
 import numpy as np
+from collections import Counter
 from spimi import SPIMI
 from preprocessor import Preprocessor
 from paths import DATA_DIR, BLOCKS_DIR
@@ -112,25 +113,53 @@ class IndexInverted:
         
     def consult_query(self, query, topk):
         """Returns the top k documents for a given query."""
+        scores = {} # Dictionary of document id to score
 
+        query_preprocessed = [token for i, token in Preprocessor(None)._preprocess("query", query)] # Preprocess the query
+        norm_query = 0
+        for token, tf_query in Counter(query_preprocessed).items():
+            postings_list = self.search_term(token)
 
+            if postings_list: # If the token is in the index
+                idf = np.log10(self.number_of_dcouments / len(postings_list)) # Calculate the idf of the token (universal for all documents)
+                tf_query = np.log10(tf_query + 1) # Calculate the tf of the token in the query
+                wt_query = tf_query * idf # Calculate the weight of the token in the query
 
+                norm_query += np.square(wt_query)
 
+                for document_id, tf in postings_list:
+                    tf = np.log10(tf + 1) # Calculate the tf of the token in the document
+                    wt = tf * idf # Calculate the weight of the token in the document
+
+                    scores[document_id] = scores.get(document_id, 0) + wt_query * wt # Calculate the score of the document
+
+        norm_query = np.sqrt(norm_query)
+
+        for document_id, score in scores.items():
+            norm_document = self.search_norm(document_id)
+
+            if norm_query != 0 and norm_document != 0:
+                scores[document_id] = score / (norm_query * norm_document) # Calculate the cosine similarity
+            else:
+                scores[document_id] = 0
+
+        topk_documents = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:topk] # Sort the documents by score and get the top k documents
+
+        return topk_documents # Return the top k documents
 
 if __name__ == "__main__":
     all_songs = pd.read_csv(DATA_DIR + "spotify_songs.csv")
     english_songs = all_songs[all_songs["language"] == "en"] # Only use English songs
     selected_columns = ["track_id", "track_name", "track_artist", "lyrics", "track_album_name", "playlist_name", "playlist_genre"] # Only use these columns
     filtered_english_songs = english_songs[selected_columns]
-    filtered_english_songs = filtered_english_songs.head(5) # Only use the first 5 songs for testing
+    filtered_english_songs = filtered_english_songs.head(100) # Only use the first 100 songs for testing
     filtered_english_songs_sorted = filtered_english_songs.sort_values(by='track_id')
     filtered_english_songs_sorted.to_csv(DATA_DIR + "spotify_songs_en.csv", index=False)
 
     file_name_data = "spotify_songs_en.csv"
-    data_size = 5
+    data_size = 100
     index_inverted = IndexInverted(file_name_data, data_size, block_limit=2000)
-    #index_inverted.create_index_inverted()
-    #index_inverted.write_norm_to_disk()
-    #print(index_inverted.search_term("yeah"))
-    #print(index_inverted.search_norm("00cqd6ZsSkLZqGMlQCR0Zo"))
-    index_inverted.consult_query("The trees, are singing in the wind The sky blue", 5)
+    index_inverted.create_index_inverted()
+    index_inverted.write_norm_to_disk()
+    result = index_inverted.consult_query("The trees, are singing in the wind The sky blue", 1)
+    print(result)
