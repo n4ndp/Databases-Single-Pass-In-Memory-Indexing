@@ -1,4 +1,4 @@
-# **`Single-Pass-In-Memory-Indexing`**
+# **Databases | `Single-Pass-In-Memory-Indexing`**
 
 Implementación académica en Python de Single-Pass In-Memory Indexing (SPIMI).
 
