@@ -1,6 +1,6 @@
 # **Databases | `Single-Pass-In-Memory-Indexing`**
 
-Implementación académica en Python de Single-Pass In-Memory Indexing (SPIMI).
+Implementación en Python del algoritmo Single-Pass In-Memory Indexing (SPIMI).
 
 ## **Conjunto de Datos: [Audio features and lyrics of Spotify songs](https://www.kaggle.com/datasets/imuhammad/audio-features-and-lyrics-of-spotify-songs/)**
 
