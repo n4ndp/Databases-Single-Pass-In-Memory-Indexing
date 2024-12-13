@@ -1,12 +1,12 @@
-# **`Single-Pass-In-Memory-Indexing`**
+# **`Indexación en Memoria de un Solo Pase (SPIMI)`**
 
-This is a Python implementation of Single-Pass In-Memory Indexing (SPIMI).
+Implementación académica en Python de Single-Pass In-Memory Indexing (SPIMI).
 
-## **Dataset: [Audio Features and Lyrics of Spotify Songs](https://www.kaggle.com/datasets/imuhammad/audio-features-and-lyrics-of-spotify-songs/)**
+## **Conjunto de Datos: [Audio features and lyrics of Spotify songs](https://www.kaggle.com/datasets/imuhammad/audio-features-and-lyrics-of-spotify-songs/)**
 
-The dataset provides a comprehensive collection of data for more than 18,000 Spotify songs, including information about artists, albums, audio features (e.g., loudness), lyrics, language, genres, and sub-genres.
+El conjunto de datos contiene información sobre más de 18,000 canciones de Spotify, incluyendo datos como artistas, álbumes, características de audio (como el volumen), letras, géneros, y más.
 
-Here is an example of the data contained in the dataset:
+Ejemplo de datos:
 
 ```json
 "track_id": "004s3t0ONYlzxII9PLgU6z",
@@ -26,11 +26,9 @@ Here is an example of the data contained in the dataset:
 "language": "en"
 ```
 
-This dataset contains a wide range of information about Spotify songs, making it a valuable resource for various data analysis and research purposes. The data includes audio features, lyrics, and other metadata related to each song.
+## **Algoritmo SPIMI** 
 
-## **[SPIMI](https://nlp.stanford.edu/IR-book/html/htmledition/single-pass-in-memory-indexing-1.html) Algorithm**
-
-The SPIMI algorithm is a single-pass algorithm for creating inverted indexes from a document collection. The algorithm is based on the observation that the postings lists for a given term are ordered in the document collection. The algorithm uses a single block of main memory to build the inverted index. The algorithm is as follows:
+El algoritmo SPIMI crea un índice invertido utilizando solo una pasada y un bloque de memoria. Funciona de la siguiente manera:
 
 ```
 SPIMI-Invert(token_stream):
@@ -49,5 +47,4 @@ SPIMI-Invert(token_stream):
     return output_file
 ```
 
-Merging of blocks is analogous to [BSBI](https://nlp.stanford.edu/IR-book/html/htmledition/blocked-sort-based-indexing-1.html) algorithm.
-
+La combinación de bloques es similar al algoritmo [BSBI](https://nlp.stanford.edu/IR-book/html/htmledition/blocked-sort-based-indexing-1.html).
